@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -50,5 +51,5 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Core Updater platform."""
     conf = config.get(DOMAIN, {})
-    hass.helpers.discovery.load_platform("update", DOMAIN, conf[CONF_UPDATERS], config)
+    load_platform(hass, "update", DOMAIN, conf[CONF_UPDATERS], config)
     return True
