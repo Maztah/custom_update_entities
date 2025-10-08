@@ -79,7 +79,7 @@ class CustomUpdateEntity(UpdateEntity):
             self._attr_latest_version = state
         else:
             self._attr_installed_version = state
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
  
     async def async_update(self):
         """Retrieve latest state."""
