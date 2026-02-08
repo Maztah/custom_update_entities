@@ -5,9 +5,8 @@ import logging
 
 from homeassistant.components.update import UpdateEntity
 from homeassistant.components.update.const import UpdateEntityFeature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import track_state_change
+from homeassistant.core import HomeAssistant, Event
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -64,13 +63,19 @@ class CustomUpdateEntity(UpdateEntity):
         entities = [self.config[CONF_LATEST_VERSION_ENTITY],
                     self.config[CONF_INSTALLED_VERSION_ENTITY]]
         _LOGGER.debug("Listening for state changes in %s" % json.dumps(entities))
-        track_state_change(hass, entities, 
-                           self.version_update, from_state=None, to_state=None)
+        async_track_state_change_event(hass, entities, self.version_update_event)
     
     @property
     def entity_picture(self):
         logo_url = self.config.get(CONF_LOGO_URL, None)
         return logo_url
+
+    def version_update_event(self, event: Event):
+        """Handle state change events."""
+        entity = event.data.get("entity_id")
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+        self.version_update(entity, old_state, new_state)
 
     def version_update(self, entity, old_state, new_state):
         state = new_state and new_state.state
@@ -79,7 +84,7 @@ class CustomUpdateEntity(UpdateEntity):
             self._attr_latest_version = state
         else:
             self._attr_installed_version = state
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
  
     async def async_update(self):
         """Retrieve latest state."""
